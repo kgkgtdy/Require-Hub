@@ -1,0 +1,699 @@
+local Players = game:GetService("Players")
+local TweenService = game:GetService("TweenService")
+
+local ALLOWED_USERS = { "WelcomeToOhioday" }
+local HUB_TITLE = "REQUIRE HUB"
+local HUB_SUBTITLE = "v1.0 // SERVER-SIDE LOADER, MADE BY WelcomeToOhioday"
+
+local PAGES = {
+	{
+		Category = "1. Maps",
+		Scripts = {
+			{ "Target Map", function(target) require(3157734207).scann("targetisliminal") end },
+			{ "Target Map Better", function(target) require(3696798936).load(target) end },
+			{ "KFC Map", function(target) require(3615713971).load(target) end },
+		}
+	},
+	{
+		Category = "2. Tools & Destruction",
+		Scripts = {
+			{ "Astra Dex", function(target) require(5016573984)(target) end },
+			{ "F3X Building Tools", function(target) require(4869378421).F3X(target) end },
+			{ "Nuke GUI", function(target) require(4832967293):Fire(target) end },
+		}
+	},
+	{
+		Category = "3. GUIs & Admin",
+		Scripts = {
+			{ "TeamFatGUI (Pass: temfatguiv15eas)", function(target) require(13924408521).TeamFatGUI(target) end },
+			{ "Mr. Bean Admin (Prefix ;)", function(target) require(16638501761)({Owners = {target}, Prefix = ";"}) end },
+			{ "TOPK3K", function(target) require(4253460888).die(target) end },
+			{ "Server Admin", function(target) require(3032640233):Start(target, "AAA") end },
+		}
+	},
+	{
+		Category = "4. Scripts (Page 1)",
+		Scripts = {
+			{ "Rainbow King", function(target) require(5079850399).eliza(target) end },
+			{ "Vereus", function(target) require(3306802406).Player(target) end },
+			{ "Chaotic Glitcher", function(target) require(3411076957).load(target) end },
+			{ "Hallow Slayer", function(target) require(2675506369).hal(target) end },
+			{ "Goner", function(target) require(4513235536).G(target) end },
+			{ "Zalgo (R15)", function(target) require(5195961797).eliza(target) end },
+			{ "Void Guardian", function(target) require(6375614282).load(target) end },
+			{ "Lost Soul", function(target) require(5390158029).Dark(target) end },
+			{ "Guest 66", function(target) require(5984643716).load(target) end },
+			{ "John Doe", function(target) require(86773386636719).load(target, "John Doe") end },
+		}
+	},
+	{
+		Category = "5. Scripts (Page 2)",
+		Scripts = {
+			{ "CAT Excavator", function(target) require(113179808318277)(target) end },
+			{ "CAT Excavator Backup", function(target) require(16857604287)(target) end },
+			{ "Dummy Spawner", function(target) require(130680206336655).DummySpawner(target) end },
+			{ "Clown Gun", function(target) require(5591099977)(target) end },
+			{ "Doge Army", function(target) require(5115249013).fehack(target) end },
+			{ "A15", function(target) require(18739225372).A15(target) end },
+			{ "Pandora Edit", function(target) require(4820579551).execute(target) end },
+			{ "Sans (Glitched Body)", function(target) require(5084965407).sans(target) end },
+			{ "Rainbow King Edit", function(target) require(5080946484).eliza(target) end },
+			{ "Rainbow Reaper", function(target) require(5096008941).bruh(target) end },
+		}
+	},
+	{
+		Category = "6. Scripts (Page 3)",
+		Scripts = {
+			{ "Golden Dominus", function(target) require(3256686965).load(target) end },
+			{ "Axiom Glitcher", function(target) require(4859515241).load(target) end },
+			{ "Friend Glitcher Reborn", function(target) require(4697789672).cyrus(target) end },
+			{ "Pink Sakura Hub", function(target) require(5066614742):SH(target) end },
+			{ "Van Player", function(target) require(2973851516).load(target) end },
+			{ "H*ll Elevator", function(target) require(2926381699).punish(target) end },
+			{ "Minecraft Creeper (Hold G)", function(target) require(4567132530).load(target) end },
+			{ "Binary Sword (Q to equip)", function(target) require(4941636598).load(target) end },
+			{ "Omni God of Destruction", function(target) require(2658905537).load(target) end },
+			{ "Gun Pack", function(target) require(4470274886).eze(target) end },
+		}
+	}
+}
+
+----------------------------------------------------------------
+-- AUTH
+----------------------------------------------------------------
+local function isAuth(plr)
+	if #ALLOWED_USERS == 0 then return true end
+
+	for _, name in ipairs(ALLOWED_USERS) do
+		if plr.Name:lower() == name:lower() then
+			return true
+		end
+	end
+
+	warn("[REQUIRE HUB] Not authorized: " .. plr.Name .. " (" .. plr.UserId .. ")")
+	return false
+end
+
+----------------------------------------------------------------
+-- TARGET RESOLVING (Name or DisplayName, exact or unambiguous partial)
+----------------------------------------------------------------
+local function getTargetUsername(plr, input)
+	if typeof(input) ~= "string" then
+		return plr.Name
+	end
+
+	local username = input:match("^%s*@?(.-)%s*$")
+	if username == "" then
+		return plr.Name
+	end
+
+	local lowered = username:lower()
+
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player.Name:lower() == lowered or player.DisplayName:lower() == lowered then
+			return player.Name
+		end
+	end
+
+	local match
+	for _, player in ipairs(Players:GetPlayers()) do
+		if player.Name:lower():sub(1, #lowered) == lowered
+			or player.DisplayName:lower():sub(1, #lowered) == lowered then
+			if match and match ~= player.Name then
+				warn("[REQUIRE HUB] Ambiguous username: " .. username)
+				return username
+			end
+			match = player.Name
+		end
+	end
+
+	if not match then
+		warn("[REQUIRE HUB] No player found for: " .. username)
+	end
+
+	return match or username
+end
+
+----------------------------------------------------------------
+-- RUNNER
+----------------------------------------------------------------
+local function runScript(plr, pIdx, sIdx, input)
+	local item = PAGES[pIdx] and PAGES[pIdx].Scripts[sIdx]
+	if not item then return end
+
+	local target = getTargetUsername(plr, input)
+
+	task.spawn(function()
+		local success, err = pcall(function()
+			item[2](target)
+		end)
+		if not success then
+			warn("[REQUIRE HUB] " .. item[1] .. ": " .. tostring(err))
+		end
+	end)
+end
+
+----------------------------------------------------------------
+-- R6 CONVERTER
+----------------------------------------------------------------
+local function setR6(targetPlr)
+	if not targetPlr or not targetPlr.Parent then return end
+
+	local oldChar = targetPlr.Character
+	local cf = oldChar and oldChar:GetPivot() or CFrame.new(0, 10, 0)
+
+	local ok, desc = pcall(function()
+		return Players:GetHumanoidDescriptionFromUserId(targetPlr.UserId)
+	end)
+	if not ok or not desc then
+		desc = Instance.new("HumanoidDescription")
+	end
+
+	local model = Players:CreateHumanoidModelFromDescription(desc, Enum.HumanoidRigType.R6)
+	model.Name = targetPlr.Name
+
+	-- Remove the old character first so nothing else holds the camera
+	if oldChar then
+		oldChar:Destroy()
+	end
+
+	-- Order matters: set Character, then parent to workspace
+	targetPlr.Character = model
+	model.Parent = workspace
+	model:PivotTo(cf)
+end
+
+----------------------------------------------------------------
+-- RESET (respawn in place)
+----------------------------------------------------------------
+local function resetTarget(targetPlr)
+	if not targetPlr or not targetPlr.Parent then return end
+
+	local oldChar = targetPlr.Character
+	local cf = oldChar and oldChar:GetPivot()
+
+	targetPlr:LoadCharacter() -- yields until the new character exists
+
+	local newChar = targetPlr.Character
+	if newChar and cf then
+		newChar:PivotTo(cf)
+	end
+end
+
+----------------------------------------------------------------
+-- GUI
+----------------------------------------------------------------
+local C = {
+	Main = Color3.fromRGB(28,30,34),
+	Head = Color3.fromRGB(21,23,26),
+	Card = Color3.fromRGB(38,41,47),
+	Hover = Color3.fromRGB(48,53,61),
+	Cyan = Color3.fromRGB(0,215,230),
+	DarkCyan = Color3.fromRGB(0,140,155),
+	Text = Color3.fromRGB(240,244,248),
+	Muted = Color3.fromRGB(150,160,170),
+	Line = Color3.fromRGB(60,65,75)
+}
+
+local function ui(cls, props, rad, strokeCol)
+	local o = Instance.new(cls)
+
+	for k, v in pairs(props) do
+		o[k] = v
+	end
+
+	if rad then
+		Instance.new("UICorner", o).CornerRadius = UDim.new(0, rad)
+	end
+
+	if strokeCol then
+		local s = Instance.new("UIStroke", o)
+		s.Color = strokeCol
+		s.Thickness = 1.2
+		s.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+		return o, s
+	end
+
+	return o
+end
+
+local WIDTH = 560
+
+local function buildGui(plr)
+	if not isAuth(plr) then return end
+
+	local pg = plr:WaitForChild("PlayerGui")
+
+	if pg:FindFirstChild("CyberRequireHub") then
+		pg.CyberRequireHub:Destroy()
+	end
+
+	local gui = ui("ScreenGui", {
+		Name = "CyberRequireHub",
+		ResetOnSpawn = false,
+		Parent = pg
+	})
+
+	local main = ui("Frame", {
+		Size = UDim2.new(0,WIDTH,0,370),
+		Position = UDim2.new(0.5,-WIDTH/2,0.5,-185),
+		BackgroundColor3 = C.Main,
+		Active = true,
+		Draggable = true,
+		Parent = gui
+	}, 10, C.Cyan)
+
+	local head = ui("Frame", {
+		Size = UDim2.new(1,0,0,46),
+		BackgroundColor3 = C.Head,
+		Parent = main
+	}, 10)
+
+	ui("Frame", {
+		Size = UDim2.new(1,0,0,2),
+		Position = UDim2.new(0,0,1,0),
+		BackgroundColor3 = C.Cyan,
+		BorderSizePixel = 0,
+		Parent = head
+	})
+
+	ui("TextLabel", {
+		Size = UDim2.new(0,230,0,24),
+		Position = UDim2.new(0,12,0,4),
+		BackgroundTransparency = 1,
+		Font = Enum.Font.GothamBold,
+		Text = HUB_TITLE,
+		TextColor3 = C.Cyan,
+		TextSize = 16,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = head
+	})
+
+	ui("TextLabel", {
+		Size = UDim2.new(0,240,0,14),
+		Position = UDim2.new(0,12,0,26),
+		BackgroundTransparency = 1,
+		Font = Enum.Font.Gotham,
+		Text = HUB_SUBTITLE,
+		TextColor3 = C.Muted,
+		TextSize = 9,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		Parent = head
+	})
+
+	-- Dropdown button (header)
+	local ddBtn = ui("TextButton", {
+		Size = UDim2.new(0,122,0,28),
+		Position = UDim2.new(1,-280,0.5,-14),
+		BackgroundColor3 = C.Card,
+		Font = Enum.Font.GothamBold,
+		Text = "SELF  v",
+		TextColor3 = C.Cyan,
+		TextSize = 11,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		Parent = head
+	}, 6, C.DarkCyan)
+
+	-- Username box (overrides the dropdown when filled)
+	local tBox = ui("TextBox", {
+		Size = UDim2.new(0,110,0,28),
+		Position = UDim2.new(1,-152,0.5,-14),
+		BackgroundColor3 = C.Card,
+		Font = Enum.Font.GothamMedium,
+		PlaceholderText = "Username",
+		PlaceholderColor3 = C.Muted,
+		Text = "",
+		TextColor3 = C.Text,
+		TextSize = 12,
+		ClearTextOnFocus = false,
+		Parent = head
+	}, 6, C.DarkCyan)
+
+	local minBtn = ui("TextButton", {
+		Size = UDim2.new(0,28,0,28),
+		Position = UDim2.new(1,-36,0.5,-14),
+		BackgroundColor3 = C.Card,
+		Font = Enum.Font.GothamBold,
+		Text = "—",
+		TextColor3 = C.Cyan,
+		TextSize = 14,
+		Parent = head
+	}, 6)
+
+	local view = ui("Frame", {
+		Size = UDim2.new(1,-24,1,-104),
+		Position = UDim2.new(0,12,0,54),
+		BackgroundTransparency = 1,
+		ClipsDescendants = true,
+		Parent = main
+	})
+
+	----------------------------------------------------------------
+	-- DROPDOWN LIST
+	----------------------------------------------------------------
+	local selected = nil -- nil = self, otherwise a player's Name
+
+	local list = ui("ScrollingFrame", {
+		Size = UDim2.new(0,122,0,160),
+		Position = UDim2.new(1,-280,0,52),
+		BackgroundColor3 = C.Head,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 3,
+		ScrollBarImageColor3 = C.Cyan,
+		AutomaticCanvasSize = Enum.AutomaticSize.Y,
+		CanvasSize = UDim2.new(0,0,0,0),
+		Visible = false,
+		ZIndex = 20,
+		Parent = main
+	}, 6, C.Cyan)
+
+	ui("UIListLayout", {
+		Padding = UDim.new(0,3),
+		SortOrder = Enum.SortOrder.LayoutOrder,
+		Parent = list
+	})
+
+	ui("UIPadding", {
+		PaddingTop = UDim.new(0,4),
+		PaddingBottom = UDim.new(0,4),
+		PaddingLeft = UDim.new(0,4),
+		PaddingRight = UDim.new(0,4),
+		Parent = list
+	})
+
+	local function setSelected(name)
+		selected = name
+		ddBtn.Text = (name or "SELF") .. "  v"
+		list.Visible = false
+	end
+
+	local function addOption(label, value, order)
+		local opt = ui("TextButton", {
+			Size = UDim2.new(1,0,0,24),
+			BackgroundColor3 = C.Card,
+			Font = Enum.Font.GothamMedium,
+			Text = label,
+			TextColor3 = C.Text,
+			TextSize = 11,
+			TextTruncate = Enum.TextTruncate.AtEnd,
+			LayoutOrder = order,
+			ZIndex = 21,
+			Parent = list
+		}, 5)
+
+		opt.MouseEnter:Connect(function() opt.BackgroundColor3 = C.Hover end)
+		opt.MouseLeave:Connect(function() opt.BackgroundColor3 = C.Card end)
+		opt.MouseButton1Click:Connect(function() setSelected(value) end)
+	end
+
+	local function refreshList()
+		for _, child in ipairs(list:GetChildren()) do
+			if child:IsA("TextButton") then
+				child:Destroy()
+			end
+		end
+
+		addOption("SELF", nil, 0)
+
+		local order = 1
+		for _, p in ipairs(Players:GetPlayers()) do
+			addOption(p.Name, p.Name, order)
+			order += 1
+		end
+
+		-- If the selected player left, fall back to self
+		if selected and not Players:FindFirstChild(selected) then
+			setSelected(nil)
+			list.Visible = false
+		end
+	end
+
+	refreshList()
+
+	local conns = {
+		Players.PlayerAdded:Connect(refreshList),
+		Players.PlayerRemoving:Connect(function()
+			task.defer(refreshList)
+		end),
+	}
+
+	gui.Destroying:Connect(function()
+		for _, c in ipairs(conns) do c:Disconnect() end
+	end)
+
+	ddBtn.MouseButton1Click:Connect(function()
+		list.Visible = not list.Visible
+	end)
+
+	-- Shared helper: username box > dropdown pick > self
+	local function resolveTargetPlayer()
+		local input = tBox.Text
+		if input == "" then
+			input = selected or ""
+		end
+		return Players:FindFirstChild(getTargetUsername(plr, input))
+	end
+
+	----------------------------------------------------------------
+	-- PAGES / SCRIPT BUTTONS
+	----------------------------------------------------------------
+	local slides = {}
+
+	for pIdx, pData in ipairs(PAGES) do
+		local page = ui("ScrollingFrame", {
+			Size = UDim2.new(1,0,1,0),
+			Position = UDim2.new(pIdx == 1 and 0 or 1,0,0,0),
+			Visible = pIdx == 1,
+			BackgroundTransparency = 1,
+			BorderSizePixel = 0,
+			ScrollBarThickness = 4,
+			ScrollBarImageColor3 = C.Cyan,
+			AutomaticCanvasSize = Enum.AutomaticSize.Y,
+			Parent = view
+		})
+
+		ui("UIGridLayout", {
+			CellSize = UDim2.new(0.485,0,0,36),
+			CellPadding = UDim2.new(0.03,0,0,8),
+			Parent = page
+		})
+
+		for sIdx, sData in ipairs(pData.Scripts) do
+			local btn, st = ui("TextButton", {
+				BackgroundColor3 = C.Card,
+				Font = Enum.Font.GothamSemibold,
+				Text = sData[1],
+				TextColor3 = C.Text,
+				TextSize = 12,
+				TextTruncate = Enum.TextTruncate.AtEnd,
+				Parent = page
+			}, 6, C.Line)
+
+			btn.MouseEnter:Connect(function()
+				btn.BackgroundColor3 = C.Hover
+				st.Color = C.Cyan
+			end)
+
+			btn.MouseLeave:Connect(function()
+				btn.BackgroundColor3 = C.Card
+				st.Color = C.Line
+			end)
+
+			btn.MouseButton1Click:Connect(function()
+				btn.BackgroundColor3 = C.Cyan
+				btn.TextColor3 = C.Head
+
+				task.delay(0.15, function()
+					btn.BackgroundColor3 = C.Card
+					btn.TextColor3 = C.Text
+				end)
+
+				list.Visible = false
+
+				-- Priority: username box > dropdown pick > self
+				local input = tBox.Text
+				if input == "" then
+					input = selected or ""
+				end
+
+				runScript(plr, pIdx, sIdx, input)
+			end)
+		end
+
+		slides[pIdx] = page
+	end
+
+	----------------------------------------------------------------
+	-- FOOTER / PAGING
+	----------------------------------------------------------------
+	local foot = ui("Frame", {
+		Size = UDim2.new(1,-24,0,36),
+		Position = UDim2.new(0,12,1,-44),
+		BackgroundColor3 = C.Head,
+		Parent = main
+	}, 8, C.Line)
+
+	local prev = ui("TextButton", {
+		Size = UDim2.new(0,85,0,26),
+		Position = UDim2.new(0,6,0.5,-13),
+		BackgroundColor3 = C.Card,
+		Font = Enum.Font.GothamBold,
+		Text = "< PREV",
+		TextColor3 = C.Cyan,
+		TextSize = 12,
+		Parent = foot
+	}, 6)
+
+	-- R6 button
+	local r6Btn = ui("TextButton", {
+		Size = UDim2.new(0,44,0,26),
+		Position = UDim2.new(0,97,0.5,-13),
+		BackgroundColor3 = C.Card,
+		Font = Enum.Font.GothamBold,
+		Text = "R6",
+		TextColor3 = C.Cyan,
+		TextSize = 12,
+		Parent = foot
+	}, 6, C.DarkCyan)
+
+	r6Btn.MouseButton1Click:Connect(function()
+		r6Btn.BackgroundColor3 = C.Cyan
+		r6Btn.TextColor3 = C.Head
+		task.delay(0.15, function()
+			r6Btn.BackgroundColor3 = C.Card
+			r6Btn.TextColor3 = C.Cyan
+		end)
+
+		list.Visible = false
+
+		local targetPlr = resolveTargetPlayer()
+
+		task.spawn(function()
+			local ok, err = pcall(setR6, targetPlr)
+			if not ok then
+				warn("[REQUIRE HUB] R6: " .. tostring(err))
+			end
+		end)
+	end)
+
+	-- Reset button
+	local resetBtn = ui("TextButton", {
+		Size = UDim2.new(0,56,0,26),
+		Position = UDim2.new(0,147,0.5,-13),
+		BackgroundColor3 = C.Card,
+		Font = Enum.Font.GothamBold,
+		Text = "RESET",
+		TextColor3 = C.Cyan,
+		TextSize = 11,
+		Parent = foot
+	}, 6, C.DarkCyan)
+
+	resetBtn.MouseButton1Click:Connect(function()
+		resetBtn.BackgroundColor3 = C.Cyan
+		resetBtn.TextColor3 = C.Head
+		task.delay(0.15, function()
+			resetBtn.BackgroundColor3 = C.Card
+			resetBtn.TextColor3 = C.Cyan
+		end)
+
+		list.Visible = false
+
+		local targetPlr = resolveTargetPlayer()
+
+		task.spawn(function()
+			local ok, err = pcall(resetTarget, targetPlr)
+			if not ok then
+				warn("[REQUIRE HUB] Reset: " .. tostring(err))
+			end
+		end)
+	end)
+
+	local nextB = ui("TextButton", {
+		Size = UDim2.new(0,85,0,26),
+		Position = UDim2.new(1,-91,0.5,-13),
+		BackgroundColor3 = C.Card,
+		Font = Enum.Font.GothamBold,
+		Text = "NEXT >",
+		TextColor3 = C.Cyan,
+		TextSize = 12,
+		Parent = foot
+	}, 6)
+
+	local ind = ui("TextLabel", {
+		Size = UDim2.new(1,-308,1,0),
+		Position = UDim2.new(0,208,0,0),
+		BackgroundTransparency = 1,
+		Font = Enum.Font.GothamBold,
+		Text = PAGES[1].Category .. "  (1 / " .. #PAGES .. ")",
+		TextColor3 = C.Text,
+		TextSize = 12,
+		TextTruncate = Enum.TextTruncate.AtEnd,
+		Parent = foot
+	})
+
+	local cur = 1
+	local busy = false
+	local info = TweenInfo.new(0.35, Enum.EasingStyle.Quart, Enum.EasingDirection.Out)
+
+	local function go(n, dir)
+		if busy then return end
+
+		n = n < 1 and #PAGES or (n > #PAGES and 1 or n)
+		if n == cur then return end
+		busy = true
+		list.Visible = false
+
+		local oldF = slides[cur]
+		local newF = slides[n]
+
+		newF.Position = UDim2.new(dir,0,0,0)
+		newF.Visible = true
+
+		TweenService:Create(oldF, info, {
+			Position = UDim2.new(-dir,0,0,0)
+		}):Play()
+
+		local tIn = TweenService:Create(newF, info, {
+			Position = UDim2.new(0,0,0,0)
+		})
+
+		tIn:Play()
+
+		ind.Text = PAGES[n].Category .. "  (" .. n .. " / " .. #PAGES .. ")"
+		cur = n
+
+		tIn.Completed:Connect(function()
+			oldF.Visible = false
+			busy = false
+		end)
+	end
+
+	prev.MouseButton1Click:Connect(function()
+		go(cur - 1, -1)
+	end)
+
+	nextB.MouseButton1Click:Connect(function()
+		go(cur + 1, 1)
+	end)
+
+	local minimized = false
+
+	minBtn.MouseButton1Click:Connect(function()
+		minimized = not minimized
+
+		view.Visible = not minimized
+		foot.Visible = not minimized
+		list.Visible = false
+		minBtn.Text = minimized and "+" or "—"
+
+		main.Size = minimized
+			and UDim2.new(0,WIDTH,0,46)
+			or UDim2.new(0,WIDTH,0,370)
+	end)
+end
+
+Players.PlayerAdded:Connect(buildGui)
+
+for _, player in ipairs(Players:GetPlayers()) do
+	buildGui(player)
+end
