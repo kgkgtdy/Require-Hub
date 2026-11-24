@@ -22,6 +22,18 @@ end },
 { "Brookhaven", function()
     require(110191289672557).brookhaven("wolfgang mozart")
 end },
+{
+    "Here School (Baldi Map)",
+    function()
+        require(9127138970).loadmap("baldi")
+    end
+},
+{
+    "Liquor",
+    function(target)
+        require(17110655911).asd(target)
+    end
+},
 
 
 		}
@@ -65,6 +77,29 @@ end },
 end },
 { "Pink UTG", function(target)
     require(0x663DE0DA4D31):UTGRem(target, "Safe")
+end },
+{
+    "TOPK3K V5",
+    function(target)
+        require(0x342D5F0DA)(target)
+    end
+},
+
+{
+    "Lightning Cannon UTG",
+    function(target)
+        require(6952104784).load(target)
+    end
+},
+{ "POO PEE STINKY HUB", function(target)
+    require(6341471096).Jimmy_Giovannas_burgers(target)
+end },
+
+{ "loololol's Hub Happy 100 Edition", function(target)
+    require(6974351120).lol(target, "Leaked", "By", "AloeVera")
+end },
+{ "Kasper's Hub V2", function(target)
+    require(5711722755).KaspersHubV2(target)
 end },
 		
 		}
@@ -174,9 +209,112 @@ end },
 { "Junkbot", function(target)
     require(13197902859).Junk(target)
 end },
+{
+    "The Obliterator",
+    function(target)
+        require(5375491266).Player(target)
+    end
+},
+{
+    "Weird Einstein Guy",
+    function(target)
+        require(93943988217861)(target, "einstein.exe")
+    end
+},
+{
+    "Verity",
+    function(target)
+        require(95903685776636)(target)
+    end
+},
+{
+    "Lemon Car",
+    function(target)
+        require(9217736031).load(target)
+    end
+},
+{
+    "Noob Switcher V5",
+    function(target)
+        require(5062237179).load(target)
+    end
+},
+{
+    "The Emperor",
+    function(target)
+        require(134683270694363)(target)
+    end
+},
+{
+    "Neighbor",
+    function(target)
+        require(74071222592445).Neighbor(target)
+    end
+},
+{
+    "Springtrap",
+    function(target)
+        require(89830906197559).load(target)
+    end
+},
 
     },
 },
+
+{
+    Category = "10. Scripts (Page 7)",
+    Scripts = {
+        { "Studio Mode", function(target)
+    require(138932469655704)(target)
+
+    local player = game:GetService("Players"):FindFirstChild(target)
+    if not player then return end
+
+    local playerGui = player:FindFirstChildOfClass("PlayerGui")
+    if not playerGui then return end
+
+    if playerGui:FindFirstChild("StudioModeMouseUnlock") then
+        return
+    end
+
+    local unlockGui = Instance.new("ScreenGui")
+    unlockGui.Name = "StudioModeMouseUnlock"
+    unlockGui.ResetOnSpawn = true
+    unlockGui.DisplayOrder = 10001
+
+    local modalButton = Instance.new("TextButton")
+    modalButton.Name = "MouseUnlock"
+    modalButton.Size = UDim2.fromOffset(1, 1)
+    modalButton.Position = UDim2.fromOffset(0, 0)
+    modalButton.BackgroundTransparency = 1
+    modalButton.Text = ""
+    modalButton.AutoButtonColor = false
+    modalButton.Visible = true
+    modalButton.Modal = true
+    modalButton.Parent = unlockGui
+
+    unlockGui.Parent = playerGui
+end },
+{ "Gmod Glitcher", function(target)
+    require(5411514341).ggtrm(target)
+end },
+
+{ "Berserk", function(target)
+    require(4735426809).randomload5(target)
+end },
+{ "Chat Hax", function(target)
+    require(6368489871).Chat(target)
+end },
+{ "Experience Chat", function(target)
+    require(140308449260304):LoadExpirienceChat({
+        ChatFilteringEnabled = false
+    })
+end },
+
+    },
+},
+
+
 }
 
 ----------------------------------------------------------------
